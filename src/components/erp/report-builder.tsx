@@ -287,7 +287,7 @@ function ReportBuilder({
             <div key={filter.id} className="flex items-center gap-2">
               <Select
                 value={filter.columnId}
-                onValueChange={(val) => handleFilterChange(filter.id, { columnId: val })}
+                onValueChange={(val) => handleFilterChange(filter.id, { columnId: val ?? "" })}
               >
                 <SelectTrigger className="w-[150px]">
                   <SelectValue />
@@ -304,7 +304,7 @@ function ReportBuilder({
               <Select
                 value={filter.operator}
                 onValueChange={(val) =>
-                  handleFilterChange(filter.id, { operator: val as ReportFilter["operator"] })
+                  handleFilterChange(filter.id, { operator: (val ?? "contains") as ReportFilter["operator"] })
                 }
               >
                 <SelectTrigger className="w-[130px]">
@@ -369,10 +369,10 @@ function ReportBuilder({
                 value={sort.columnId}
                 onValueChange={(val) => {
                   const newSorts = sorts.map((s) =>
-                    s.columnId === sort.columnId ? { ...s, columnId: val } : s
+                    s.columnId === sort.columnId ? { ...s, columnId: val ?? "" } : s
                   )
-                  setInternalSorts(newSorts)
-                  onSortsChange?.(newSorts)
+                  setInternalSorts(newSorts as ReportSort[])
+                  onSortsChange?.(newSorts as ReportSort[])
                 }}
               >
                 <SelectTrigger className="w-[200px]">
