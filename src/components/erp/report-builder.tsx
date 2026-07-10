@@ -153,11 +153,11 @@ function ReportBuilder({
   const handleSortDirectionToggle = (columnId: string) => {
     const newSorts = sorts.map((s) =>
       s.columnId === columnId
-        ? { ...s, direction: s.direction === "asc" ? "desc" : "asc" }
+        ? { ...s, direction: (s.direction === "asc" ? "desc" : "asc") as "asc" | "desc" }
         : s
     )
-    setInternalSorts(newSorts)
-    onSortsChange?.(newSorts)
+    setInternalSorts(newSorts as ReportSort[])
+    onSortsChange?.(newSorts as ReportSort[])
   }
 
   const handleToggleColumn = (columnId: string) => {

@@ -147,7 +147,7 @@ function MaterialRequestForm({
           </div>
           <div className="space-y-2">
             <Label htmlFor="department">Department *</Label>
-            <Select value={department} onValueChange={setDepartment}>
+            <Select value={department} onValueChange={(v) => setDepartment(v ?? "")}>
               <SelectTrigger>
                 <SelectValue placeholder="Select department" />
               </SelectTrigger>

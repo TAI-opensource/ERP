@@ -2,6 +2,8 @@
 
 import * as React from "react"
 import { cn } from "@/lib/utils"
+
+type SelectChangeHandler = (value: string | null, eventDetails: any) => void
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -197,7 +199,7 @@ function DunningList({
               className="pl-8"
             />
           </div>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v ?? "all")}>
             <SelectTrigger className="w-[150px]">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
@@ -210,7 +212,7 @@ function DunningList({
               ))}
             </SelectContent>
           </Select>
-          <Select value={levelFilter} onValueChange={setLevelFilter}>
+          <Select value={levelFilter} onValueChange={(v) => setLevelFilter(v ?? "all")}>
             <SelectTrigger className="w-[150px]">
               <SelectValue placeholder="Level" />
             </SelectTrigger>

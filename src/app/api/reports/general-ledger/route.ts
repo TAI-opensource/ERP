@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
     if (!fromDate || !toDate) return badRequest("fromDate and toDate are required");
 
     const conditions: any[] = [
-      eq(journalEntryLines.companyId, companyId),
+      eq(journalEntries.companyId, companyId),
       eq(journalEntries.status, "posted"),
       sql`${journalEntries.postingDate} >= ${fromDate}`,
       sql`${journalEntries.postingDate} <= ${toDate}`,
