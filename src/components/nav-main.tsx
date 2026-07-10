@@ -42,13 +42,14 @@ export function NavMain({
             defaultOpen={item.isActive}
             render={<SidebarMenuItem />}
           >
-            <SidebarMenuButton
-              tooltip={item.title}
-              render={<a href={item.url} />}
+            <CollapsibleTrigger
+              render={
+                <SidebarMenuButton tooltip={item.title} />
+              }
             >
               {item.icon}
               <span>{item.title}</span>
-            </SidebarMenuButton>
+            </CollapsibleTrigger>
             {item.items?.length ? (
               <>
                 <CollapsibleTrigger
