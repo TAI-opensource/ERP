@@ -212,7 +212,7 @@ function BudgetForm({
               <Label>Fiscal Year <span className="text-destructive">*</span></Label>
               <Select
                 value={formData.fiscalYear}
-                onValueChange={(val) => setFormData((prev) => ({ ...prev, fiscalYear: val }))}
+                onValueChange={(val) => setFormData((prev) => ({ ...prev, fiscalYear: val ?? "" }))}
                 disabled={readOnly}
               >
                 <SelectTrigger className={cn(errors.fiscalYear && "border-destructive")}>
@@ -238,7 +238,7 @@ function BudgetForm({
               <Label>Cost Center</Label>
               <Select
                 value={formData.costCenter}
-                onValueChange={(val) => setFormData((prev) => ({ ...prev, costCenter: val }))}
+                onValueChange={(val) => setFormData((prev) => ({ ...prev, costCenter: val ?? "" }))}
                 disabled={readOnly}
               >
                 <SelectTrigger>
@@ -257,7 +257,7 @@ function BudgetForm({
               <Label>Status</Label>
               <Select
                 value={formData.status}
-                onValueChange={(val) => setFormData((prev) => ({ ...prev, status: val as BudgetFormData["status"] }))}
+                onValueChange={(val) => setFormData((prev) => ({ ...prev, status: (val ?? "draft") as BudgetFormData["status"] }))}
                 disabled={readOnly}
               >
                 <SelectTrigger>
@@ -326,7 +326,7 @@ function BudgetForm({
                     <TableCell>
                       <Select
                         value={line.accountId}
-                        onValueChange={(val) => updateLineAccount(line.id, val)}
+                        onValueChange={(val) => updateLineAccount(line.id, val ?? "")}
                         disabled={readOnly}
                       >
                         <SelectTrigger className="h-8 text-xs">

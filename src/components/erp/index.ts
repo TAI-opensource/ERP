@@ -28,7 +28,7 @@ export { ChartOfAccountsTree, AccountTreeNode, accountTypeConfig, type AccountNo
 export { AccountForm, AccountTreeSelect, type AccountFormData, type AccountFormProps, type AccountOption, accountTypes, subtypesByType } from "./account-form"
 
 // Accounting Module - Journal Entries
-export { JournalEntryForm, type JournalEntryLine, type JournalEntryFormData, type JournalEntryFormProps, type VoucherType, type AccountOption, type CostCenterOption } from "./journal-entry-form"
+export { JournalEntryForm, type JournalEntryLine, type JournalEntryFormData, type JournalEntryFormProps, type VoucherType, type AccountOption as JournalAccountOption, type CostCenterOption } from "./journal-entry-form"
 export { JournalEntryList, type JournalEntry, type JournalEntryListProps, type JournalEntryStatus, statusConfig as journalEntryStatusConfig } from "./journal-entry-list"
 
 // Accounting Module - Payment Entries

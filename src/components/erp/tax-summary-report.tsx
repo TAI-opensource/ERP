@@ -139,7 +139,7 @@ function TaxSummaryReport({
                   </TableRow>
                 ))
               )}
-            </Table>
+            </TableBody>
             {taxes.length > 0 && (
               <tfoot>
                 <tr className="border-t-2 bg-muted/50 font-medium">

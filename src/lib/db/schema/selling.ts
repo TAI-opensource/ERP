@@ -15,7 +15,7 @@ import {
 import { companies } from "./core";
 import { users } from "./auth";
 import { items } from "./stock";
-import { chartOfAccounts } from "./accounting";
+import { chartOfAccounts, paymentTermsTemplates } from "./accounting";
 
 export const customers = pgTable(
   "customers",
@@ -458,40 +458,4 @@ export const salesInvoiceLines = pgTable(
   ]
 );
 
-// Payment Terms Template
-export const paymentTermsTemplates = pgTable(
-  "payment_terms_templates",
-  {
-    id: uuid("id").defaultRandom().primaryKey(),
-    tenantId: uuid("tenant_id").notNull(),
-    companyId: uuid("company_id").notNull().references(() => companies.id, { onDelete: "cascade" }),
-    templateName: varchar("template_name", { length: 255 }).notNull(),
-    description: text("description"),
-    isActive: boolean("is_active").default(true).notNull(),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().notNull(),
-  },
-  (t) => [
-    index("payment_terms_tenant_idx").on(t.tenantId),
-    index("payment_terms_company_idx").on(t.companyId),
-  ]
-);
-
-// Payment Terms Template Details
-export const paymentTermsTemplateDetails = pgTable(
-  "payment_terms_template_details",
-  {
-    id: uuid("id").defaultRandom().primaryKey(),
-    tenantId: uuid("tenant_id").notNull(),
-    templateId: uuid("template_id").notNull().references(() => paymentTermsTemplates.id, { onDelete: "cascade" }),
-    dueInDays: integer("due_in_days").notNull(),
-    description: varchar("description", { length: 255 }),
-    invoicePortion: decimal("invoice_portion", { precision: 5, scale: 2 }).default("100"),
-    creditDays: integer("credit_days"),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-  },
-  (t) => [
-    index("payment_terms_details_tenant_idx").on(t.tenantId),
-    index("payment_terms_details_template_idx").on(t.templateId),
-  ]
-);
+// Payment Terms Templates & Details are defined in accounting.ts

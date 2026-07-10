@@ -103,7 +103,7 @@ function BudgetVsActual({
               <p className="text-sm text-muted-foreground">Fiscal Year {fiscalYear}</p>
             </div>
             <div className="flex items-center gap-2">
-              <Select value={periodFilter} onValueChange={onPeriodChange}>
+              <Select value={periodFilter} onValueChange={(v) => onPeriodChange?.(v ?? "all")}>
                 <SelectTrigger className="w-[160px]">
                   <SelectValue />
                 </SelectTrigger>

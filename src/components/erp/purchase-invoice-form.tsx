@@ -265,7 +265,7 @@ function PurchaseInvoiceForm({
                   const supplier = suppliers.find((s) => s.id === val)
                   setFormData((prev) => ({
                     ...prev,
-                    supplierId: val,
+                    supplierId: val ?? "",
                     supplierName: supplier?.name ?? "",
                   }))
                 }}
@@ -340,7 +340,7 @@ function PurchaseInvoiceForm({
               <Label>Payment Terms</Label>
               <Select
                 value={formData.paymentTerms}
-                onValueChange={(val) => setFormData((prev) => ({ ...prev, paymentTerms: val }))}
+                onValueChange={(val) => setFormData((prev) => ({ ...prev, paymentTerms: val ?? "" }))}
                 disabled={readOnly}
               >
                 <SelectTrigger>

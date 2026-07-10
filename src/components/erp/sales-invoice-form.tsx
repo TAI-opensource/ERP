@@ -297,7 +297,7 @@ function SalesInvoiceForm({
                   const customer = customers.find((c) => c.id === val)
                   setFormData((prev) => ({
                     ...prev,
-                    customerId: val,
+                    customerId: val ?? "",
                     customerName: customer?.name ?? "",
                   }))
                 }}
@@ -362,7 +362,7 @@ function SalesInvoiceForm({
               <Label>Payment Terms</Label>
               <Select
                 value={formData.paymentTerms}
-                onValueChange={(val) => setFormData((prev) => ({ ...prev, paymentTerms: val }))}
+                onValueChange={(val) => setFormData((prev) => ({ ...prev, paymentTerms: val ?? "" }))}
                 disabled={readOnly}
               >
                 <SelectTrigger>
