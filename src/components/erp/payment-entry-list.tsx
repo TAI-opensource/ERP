@@ -159,7 +159,7 @@ function PaymentEntryList({
             )}
           </div>
 
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v ?? "all")}>
             <SelectTrigger className="w-[140px]">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
@@ -172,7 +172,7 @@ function PaymentEntryList({
             </SelectContent>
           </Select>
 
-          <Select value={typeFilter} onValueChange={setTypeFilter}>
+          <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v ?? "all")}>
             <SelectTrigger className="w-[160px]">
               <SelectValue placeholder="Payment Type" />
             </SelectTrigger>

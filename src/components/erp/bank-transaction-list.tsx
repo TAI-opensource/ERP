@@ -202,7 +202,7 @@ function BankTransactionList({
           <div className="flex flex-wrap items-end gap-2 rounded-lg border bg-muted/30 p-3">
             <div className="space-y-1">
               <label className="text-xs font-medium">Type</label>
-              <Select value={typeFilter} onValueChange={setTypeFilter}>
+              <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v ?? "all")}>
                 <SelectTrigger className="w-[120px] h-8">
                   <SelectValue />
                 </SelectTrigger>
@@ -216,7 +216,7 @@ function BankTransactionList({
             </div>
             <div className="space-y-1">
               <label className="text-xs font-medium">Status</label>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v ?? "all")}>
                 <SelectTrigger className="w-[120px] h-8">
                   <SelectValue />
                 </SelectTrigger>

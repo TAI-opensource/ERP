@@ -160,7 +160,7 @@ function InvoiceList({
             )}
           </div>
 
-          <Select value={typeFilter} onValueChange={setTypeFilter}>
+          <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v ?? "all")}>
             <SelectTrigger className="w-[140px]">
               <SelectValue placeholder="Type" />
             </SelectTrigger>
@@ -171,7 +171,7 @@ function InvoiceList({
             </SelectContent>
           </Select>
 
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v ?? "all")}>
             <SelectTrigger className="w-[140px]">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
