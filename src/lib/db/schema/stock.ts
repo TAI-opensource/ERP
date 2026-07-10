@@ -76,7 +76,7 @@ export const items = pgTable(
     leadTimeDays: integer("lead_time_days"),
     image: varchar("image", { length: 512 }),
     attributes: jsonb("attributes").default({}),
-    valuationMethod: varchar("valuation_method", { length: 50 }).default("fifo"), // fifo, weighted_average
+    valuationMethod: varchar("valuation_method", { length: 50 }).default("fifo"),
     hasVariants: boolean("has_variants").default(false).notNull(),
     variantOf: uuid("variant_of"),
     manufacturer: varchar("manufacturer", { length: 255 }),
