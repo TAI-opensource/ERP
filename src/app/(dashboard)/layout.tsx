@@ -49,7 +49,18 @@ const routeLabels: Record<string, string> = {
   quality: "Quality",
   procedures: "Procedures",
   inspections: "Inspections",
+  upgrade: "Upgrade to Pro",
+  account: "Account Settings",
+  billing: "Billing",
+  notifications: "Notifications",
   new: "New",
+  security: "Security",
+  preferences: "Preferences",
+  team: "Team",
+  "payment-methods": "Payment Methods",
+  invoices: "Invoices",
+  subscriptions: "Subscriptions",
+  history: "History",
 }
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
