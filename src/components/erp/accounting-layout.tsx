@@ -14,6 +14,7 @@ import {
   BarChart3Icon,
   PieChartIcon,
   TrendingUpIcon,
+  TrendingDownIcon,
   CalculatorIcon,
   SettingsIcon,
   ChevronDownIcon,
