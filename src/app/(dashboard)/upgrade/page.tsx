@@ -144,11 +144,11 @@ export default function UpgradePage() {
       </div>
 
       {/* Pricing Cards */}
-      <div className="grid gap-6 lg:grid-cols-3 max-w-5xl mx-auto">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 max-w-7xl mx-auto w-full">
         {plans.map((plan) => (
           <Card
             key={plan.name}
-            className={`relative flex flex-col ${
+            className={`relative flex flex-col min-w-[300px] ${
               plan.popular
                 ? "border-primary shadow-lg scale-[1.02]"
                 : ""
