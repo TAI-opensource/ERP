@@ -61,6 +61,23 @@ const routeLabels: Record<string, string> = {
   invoices: "Invoices",
   subscriptions: "Subscriptions",
   history: "History",
+  banking: "Banking",
+  accounts: "Accounts",
+  transactions: "Transactions",
+  reconciliation: "Reconciliation",
+  budgets: "Budgets",
+  "tax-templates": "Tax Templates",
+  reports: "Reports",
+  "balance-sheet": "Balance Sheet",
+  "profit-loss": "Profit & Loss",
+  "trial-balance": "Trial Balance",
+  "general-ledger": "General Ledger",
+  "accounts-receivable": "Accounts Receivable",
+  "accounts-payable": "Accounts Payable",
+  "bank-summary": "Bank Summary",
+  "tax-summary": "Tax Summary",
+  "cash-flow": "Cash Flow",
+  dunnings: "Dunnings",
 }
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {

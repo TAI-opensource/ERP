@@ -32,6 +32,11 @@ const data = {
         { title: "Payment Entries", url: "/accounting/payment-entries" },
         { title: "Sales Invoices", url: "/accounting/sales-invoices" },
         { title: "Purchase Invoices", url: "/accounting/purchase-invoices" },
+        { title: "Banking", url: "/accounting/banking" },
+        { title: "Budgets", url: "/accounting/budgets" },
+        { title: "Reports", url: "/accounting/reports" },
+        { title: "Tax Templates", url: "/accounting/tax-templates" },
+        { title: "Fixed Assets", url: "/accounting/assets" },
       ],
     },
     {
