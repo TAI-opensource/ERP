@@ -2,281 +2,134 @@
 
 import * as React from "react"
 
-import { NavFavorites } from "@/components/nav-favorites"
 import { NavMain } from "@/components/nav-main"
-import { NavSecondary } from "@/components/nav-secondary"
-import { NavWorkspaces } from "@/components/nav-workspaces"
-import { TeamSwitcher } from "@/components/team-switcher"
+import { NavUser } from "@/components/nav-user"
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarHeader,
   SidebarRail,
 } from "@/components/ui/sidebar"
-import { TerminalIcon, AudioLinesIcon, SearchIcon, SparklesIcon, HomeIcon, InboxIcon, CalendarIcon, Settings2Icon, BlocksIcon, Trash2Icon, MessageCircleQuestionIcon } from "lucide-react"
+import { DollarSignIcon, PackageIcon, ShoppingCartIcon, UsersIcon, HandshakeIcon, FactoryIcon, FolderIcon, Building2Icon, ShieldCheckIcon, ShoppingCart } from "lucide-react"
 
 // This is sample data.
 const data = {
-  teams: [
-    {
-      name: "Acme Inc",
-      logo: (
-        <TerminalIcon
-        />
-      ),
-      plan: "Enterprise",
-    },
-    {
-      name: "Acme Corp.",
-      logo: (
-        <AudioLinesIcon
-        />
-      ),
-      plan: "Startup",
-    },
-    {
-      name: "Evil Corp.",
-      logo: (
-        <TerminalIcon
-        />
-      ),
-      plan: "Free",
-    },
-  ],
+  user: {
+    name: "shadcn",
+    email: "m@example.com",
+    avatar: "/avatars/shadcn.jpg",
+  },
   navMain: [
     {
-      title: "Search",
-      url: "#",
-      icon: (
-        <SearchIcon
-        />
-      ),
-    },
-    {
-      title: "Ask AI",
-      url: "#",
-      icon: (
-        <SparklesIcon
-        />
-      ),
-    },
-    {
-      title: "Home",
-      url: "#",
-      icon: (
-        <HomeIcon
-        />
-      ),
-      isActive: true,
-    },
-    {
-      title: "Inbox",
-      url: "#",
-      icon: (
-        <InboxIcon
-        />
-      ),
-      badge: "10",
-    },
-  ],
-  navSecondary: [
-    {
-      title: "Calendar",
-      url: "#",
-      icon: (
-        <CalendarIcon
-        />
-      ),
-    },
-    {
-      title: "Settings",
-      url: "#",
-      icon: (
-        <Settings2Icon
-        />
-      ),
-    },
-    {
-      title: "Templates",
-      url: "#",
-      icon: (
-        <BlocksIcon
-        />
-      ),
-    },
-    {
-      title: "Trash",
-      url: "#",
-      icon: (
-        <Trash2Icon
-        />
-      ),
-    },
-    {
-      title: "Help",
-      url: "#",
-      icon: (
-        <MessageCircleQuestionIcon
-        />
-      ),
-    },
-  ],
-  favorites: [
-    {
-      name: "Project Management & Task Tracking",
-      url: "#",
-      emoji: "📊",
-    },
-    {
-      name: "Family Recipe Collection & Meal Planning",
-      url: "#",
-      emoji: "🍳",
-    },
-    {
-      name: "Fitness Tracker & Workout Routines",
-      url: "#",
-      emoji: "💪",
-    },
-    {
-      name: "Book Notes & Reading List",
-      url: "#",
-      emoji: "📚",
-    },
-    {
-      name: "Sustainable Gardening Tips & Plant Care",
-      url: "#",
-      emoji: "🌱",
-    },
-    {
-      name: "Language Learning Progress & Resources",
-      url: "#",
-      emoji: "🗣️",
-    },
-    {
-      name: "Home Renovation Ideas & Budget Tracker",
-      url: "#",
-      emoji: "🏠",
-    },
-    {
-      name: "Personal Finance & Investment Portfolio",
-      url: "#",
-      emoji: "💰",
-    },
-    {
-      name: "Movie & TV Show Watchlist with Reviews",
-      url: "#",
-      emoji: "🎬",
-    },
-    {
-      name: "Daily Habit Tracker & Goal Setting",
-      url: "#",
-      emoji: "✅",
-    },
-  ],
-  workspaces: [
-    {
-      name: "Personal Life Management",
-      emoji: "🏠",
-      pages: [
-        {
-          name: "Daily Journal & Reflection",
-          url: "#",
-          emoji: "📔",
-        },
-        {
-          name: "Health & Wellness Tracker",
-          url: "#",
-          emoji: "🍏",
-        },
-        {
-          name: "Personal Growth & Learning Goals",
-          url: "#",
-          emoji: "🌟",
-        },
+      title: "Accounting",
+      url: "/accounting",
+      icon: <DollarSignIcon />,
+      items: [
+        { title: "Overview", url: "/accounting" },
+        { title: "Chart of Accounts", url: "/accounting/chart-of-accounts" },
+        { title: "Journal Entries", url: "/accounting/journal-entries" },
+        { title: "Payment Entries", url: "/accounting/payment-entries" },
+        { title: "Sales Invoices", url: "/accounting/sales-invoices" },
+        { title: "Purchase Invoices", url: "/accounting/purchase-invoices" },
       ],
     },
     {
-      name: "Professional Development",
-      emoji: "💼",
-      pages: [
-        {
-          name: "Career Objectives & Milestones",
-          url: "#",
-          emoji: "🎯",
-        },
-        {
-          name: "Skill Acquisition & Training Log",
-          url: "#",
-          emoji: "🧠",
-        },
-        {
-          name: "Networking Contacts & Events",
-          url: "#",
-          emoji: "🤝",
-        },
+      title: "Stock",
+      url: "/stock",
+      icon: <PackageIcon />,
+      items: [
+        { title: "Overview", url: "/stock" },
+        { title: "Items", url: "/stock/items" },
+        { title: "Warehouses", url: "/stock/warehouses" },
+        { title: "Stock Entries", url: "/stock/stock-entries" },
+        { title: "Batches", url: "/stock/batches" },
+        { title: "Serial Numbers", url: "/stock/serial-numbers" },
       ],
     },
     {
-      name: "Creative Projects",
-      emoji: "🎨",
-      pages: [
-        {
-          name: "Writing Ideas & Story Outlines",
-          url: "#",
-          emoji: "✍️",
-        },
-        {
-          name: "Art & Design Portfolio",
-          url: "#",
-          emoji: "🖼️",
-        },
-        {
-          name: "Music Composition & Practice Log",
-          url: "#",
-          emoji: "🎵",
-        },
+      title: "Selling",
+      url: "/selling",
+      icon: <ShoppingCart />,
+      items: [
+        { title: "Overview", url: "/selling" },
+        { title: "Customers", url: "/selling/customers" },
+        { title: "Quotations", url: "/selling/quotations" },
+        { title: "Sales Orders", url: "/selling/sales-orders" },
       ],
     },
     {
-      name: "Home Management",
-      emoji: "🏡",
-      pages: [
-        {
-          name: "Household Budget & Expense Tracking",
-          url: "#",
-          emoji: "💰",
-        },
-        {
-          name: "Home Maintenance Schedule & Tasks",
-          url: "#",
-          emoji: "🔧",
-        },
-        {
-          name: "Family Calendar & Event Planning",
-          url: "#",
-          emoji: "📅",
-        },
+      title: "Buying",
+      url: "/buying",
+      icon: <ShoppingCartIcon />,
+      items: [
+        { title: "Overview", url: "/buying" },
+        { title: "Suppliers", url: "/buying/suppliers" },
+        { title: "Purchase Orders", url: "/buying/purchase-orders" },
       ],
     },
     {
-      name: "Travel & Adventure",
-      emoji: "🧳",
-      pages: [
-        {
-          name: "Trip Planning & Itineraries",
-          url: "#",
-          emoji: "🗺️",
-        },
-        {
-          name: "Travel Bucket List & Inspiration",
-          url: "#",
-          emoji: "🌎",
-        },
-        {
-          name: "Travel Journal & Photo Gallery",
-          url: "#",
-          emoji: "📸",
-        },
+      title: "Human Resources",
+      url: "/hr",
+      icon: <UsersIcon />,
+      items: [
+        { title: "Overview", url: "/hr" },
+        { title: "Employees", url: "/hr/employees" },
+        { title: "Attendance", url: "/hr/attendance" },
+        { title: "Leave", url: "/hr/leave" },
+        { title: "Payroll", url: "/hr/payroll" },
+      ],
+    },
+    {
+      title: "CRM",
+      url: "/crm",
+      icon: <HandshakeIcon />,
+      items: [
+        { title: "Overview", url: "/crm" },
+        { title: "Leads", url: "/crm/leads" },
+        { title: "Opportunities", url: "/crm/opportunities" },
+        { title: "Campaigns", url: "/crm/campaigns" },
+      ],
+    },
+    {
+      title: "Manufacturing",
+      url: "/manufacturing",
+      icon: <FactoryIcon />,
+      items: [
+        { title: "Overview", url: "/manufacturing" },
+        { title: "Bill of Materials", url: "/manufacturing/bom" },
+        { title: "Work Orders", url: "/manufacturing/work-orders" },
+        { title: "Job Cards", url: "/manufacturing/job-cards" },
+      ],
+    },
+    {
+      title: "Projects",
+      url: "/projects",
+      icon: <FolderIcon />,
+      items: [
+        { title: "Overview", url: "/projects" },
+        { title: "Tasks", url: "/projects/tasks" },
+        { title: "Timesheets", url: "/projects/timesheets" },
+      ],
+    },
+    {
+      title: "Assets",
+      url: "/assets",
+      icon: <Building2Icon />,
+      items: [
+        { title: "Overview", url: "/assets" },
+        { title: "Asset List", url: "/assets/asset-list" },
+        { title: "Maintenance", url: "/assets/maintenance" },
+      ],
+    },
+    {
+      title: "Quality",
+      url: "/quality",
+      icon: <ShieldCheckIcon />,
+      items: [
+        { title: "Overview", url: "/quality" },
+        { title: "Procedures", url: "/quality/procedures" },
+        { title: "Inspections", url: "/quality/inspections" },
       ],
     },
   ],
@@ -284,16 +137,16 @@ const data = {
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
-    <Sidebar className="border-r-0" {...props}>
+    <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <TeamSwitcher teams={data.teams} />
-        <NavMain items={data.navMain} />
+        <NavUser user={data.user} />
       </SidebarHeader>
       <SidebarContent>
-        <NavFavorites favorites={data.favorites} />
-        <NavWorkspaces workspaces={data.workspaces} />
-        <NavSecondary items={data.navSecondary} className="mt-auto" />
+        <NavMain items={data.navMain} />
       </SidebarContent>
+      <SidebarFooter>
+        <NavUser user={data.user} />
+      </SidebarFooter>
       <SidebarRail />
     </Sidebar>
   )
