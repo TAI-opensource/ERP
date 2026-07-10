@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
       return badRequest("tenantId, companyId, and projectName are required");
     }
 
-    const [newProject] = await db
+    const [newProject] = await (db as any)
       .insert(projects)
       .values({
         tenantId,
@@ -109,7 +109,7 @@ export async function PUT(request: NextRequest) {
 
     if (!id) return badRequest("id is required");
 
-    const [updated] = await db
+    const [updated] = await (db as any)
       .update(projects)
       .set({ ...updates, updatedAt: new Date() })
       .where(eq(projects.id, id))
@@ -132,7 +132,7 @@ export async function DELETE(request: NextRequest) {
     const id = request.nextUrl.searchParams.get("id");
     if (!id) return badRequest("id is required");
 
-    const [deleted] = await db
+    const [deleted] = await (db as any)
       .delete(projects)
       .where(eq(projects.id, id))
       .returning();

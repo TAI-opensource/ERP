@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
       return badRequest("tenantId, companyId, itemCode, and itemName are required");
     }
 
-    const [newItem] = await db
+    const result = await (db as any)
       .insert(items)
       .values({
         tenantId,
@@ -86,6 +86,7 @@ export async function POST(request: NextRequest) {
       })
       .returning();
 
+    const newItem = Array.isArray(result) ? result[0] : result;
     return success(newItem, 201);
   } catch (error) {
     console.error("POST /api/items error:", error);
@@ -103,7 +104,7 @@ export async function PUT(request: NextRequest) {
 
     if (!id) return badRequest("id is required");
 
-    const [updated] = await db
+    const [updated] = await (db as any)
       .update(items)
       .set({ ...updates, updatedAt: new Date() })
       .where(eq(items.id, id))
@@ -126,7 +127,7 @@ export async function DELETE(request: NextRequest) {
     const id = request.nextUrl.searchParams.get("id");
     if (!id) return badRequest("id is required");
 
-    const [deleted] = await db
+    const [deleted] = await (db as any)
       .delete(items)
       .where(eq(items.id, id))
       .returning();

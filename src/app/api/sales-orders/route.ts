@@ -140,7 +140,7 @@ export async function PUT(request: NextRequest) {
 
     if (!id) return badRequest("id is required");
 
-    const [updated] = await db
+    const [updated] = await (db as any)
       .update(salesOrders)
       .set({ ...updates, updatedAt: new Date() })
       .where(eq(salesOrders.id, id))
@@ -163,7 +163,7 @@ export async function DELETE(request: NextRequest) {
     const id = request.nextUrl.searchParams.get("id");
     if (!id) return badRequest("id is required");
 
-    const [deleted] = await db
+    const [deleted] = await (db as any)
       .delete(salesOrders)
       .where(eq(salesOrders.id, id))
       .returning();

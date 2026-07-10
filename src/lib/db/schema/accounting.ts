@@ -111,6 +111,7 @@ export const journalEntryLines = pgTable(
     referenceName: varchar("reference_name", { length: 255 }),
     costCenterId: uuid("cost_center_id"),
     description: text("description"),
+    projectName: varchar("project_name", { length: 255 }),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (t) => [
@@ -146,6 +147,14 @@ export const paymentEntries = pgTable(
     createdBy: uuid("created_by").references(() => users.id),
     submittedBy: uuid("submitted_by").references(() => users.id),
     submittedAt: timestamp("submitted_at"),
+    bankAccount: uuid("bank_account").references(() => chartOfAccounts.id),
+    partyAccount: uuid("party_account").references(() => chartOfAccounts.id),
+    isInternalTransfer: boolean("is_internal_transfer").default(false).notNull(),
+    taxAmount: decimal("tax_amount", { precision: 20, scale: 4 }).default("0"),
+    baseAmount: decimal("base_amount", { precision: 20, scale: 4 }),
+    baseReceivedAmount: decimal("base_received_amount", { precision: 20, scale: 4 }),
+    unallocatedAmount: decimal("unallocated_amount", { precision: 20, scale: 4 }).default("0"),
+    costCenterId: uuid("cost_center_id"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
@@ -190,6 +199,19 @@ export const invoices = pgTable(
     submittedAt: timestamp("submitted_at"),
     cancelledBy: uuid("cancelled_by").references(() => users.id),
     cancelledAt: timestamp("cancelled_at"),
+    taxTemplate: varchar("tax_template", { length: 255 }),
+    shippingAddress: text("shipping_address"),
+    billingAddress: text("billing_address"),
+    advancePaid: decimal("advance_paid", { precision: 20, scale: 4 }).default("0"),
+    writeOffAmount: decimal("write_off_amount", { precision: 20, scale: 4 }).default("0"),
+    roundingAdjustment: decimal("rounding_adjustment", { precision: 20, scale: 4 }).default("0"),
+    baseTotal: decimal("base_total", { precision: 20, scale: 4 }).default("0"),
+    baseTaxAmount: decimal("base_tax_amount", { precision: 20, scale: 4 }).default("0"),
+    baseTotalAmount: decimal("base_total_amount", { precision: 20, scale: 4 }).default("0"),
+    placeOfSupply: varchar("place_of_supply", { length: 100 }),
+    isReverseCharge: boolean("is_reverse_charge").default(false).notNull(),
+    costCenterId: uuid("cost_center_id"),
+    projectCode: varchar("project_code", { length: 100 }),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
@@ -224,11 +246,178 @@ export const invoiceLines = pgTable(
     amount: decimal("amount", { precision: 20, scale: 4 }).notNull(),
     accountId: uuid("account_id").references(() => chartOfAccounts.id),
     costCenterId: uuid("cost_center_id"),
+    quantityInStock: decimal("quantity_in_stock", { precision: 20, scale: 4 }),
+    unitOfMeasure: varchar("unit_of_measure", { length: 50 }),
+    stockLedgerEntryId: uuid("stock_ledger_entry_id"),
+    projectName: varchar("project_name", { length: 255 }),
+    incomeAccount: uuid("income_account").references(() => chartOfAccounts.id),
+    expenseAccount: uuid("expense_account").references(() => chartOfAccounts.id),
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },
   (t) => [
     index("invoice_lines_tenant_id_idx").on(t.tenantId),
     index("invoice_lines_invoice_id_idx").on(t.invoiceId),
     index("invoice_lines_item_id_idx").on(t.itemId),
+  ]
+);
+
+// ========== MISSING TABLES FROM ERPNEXT ==========
+
+// Accounts Receivable Aging (Snapshot)
+export const receivableAgingSnapshots = pgTable(
+  "receivable_aging_snapshots",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tenantId: uuid("tenant_id").notNull(),
+    companyId: uuid("company_id").notNull().references(() => companies.id, { onDelete: "cascade" }),
+    snapshotDate: date("snapshot_date").notNull(),
+    partyType: varchar("party_type", { length: 50 }).notNull(),
+    partyId: uuid("party_id").notNull(),
+    partyName: varchar("party_name", { length: 255 }),
+    currency: varchar("currency", { length: 3 }).default("USD").notNull(),
+    totalOutstanding: decimal("total_outstanding", { precision: 20, scale: 4 }).default("0"),
+    current: decimal("current", { precision: 20, scale: 4 }).default("0"),
+    days30: decimal("days_30", { precision: 20, scale: 4 }).default("0"),
+    days60: decimal("days_60", { precision: 20, scale: 4 }).default("0"),
+    days90: decimal("days_90", { precision: 20, scale: 4 }).default("0"),
+    over90: decimal("over_90", { precision: 20, scale: 4 }).default("0"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (t) => [
+    index("receivable_aging_tenant_idx").on(t.tenantId),
+    index("receivable_aging_company_idx").on(t.companyId),
+    index("receivable_aging_date_idx").on(t.snapshotDate),
+    index("receivable_aging_party_idx").on(t.partyType, t.partyId),
+  ]
+);
+
+// Accounts Payable Aging (Snapshot)
+export const payableAgingSnapshots = pgTable(
+  "payable_aging_snapshots",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tenantId: uuid("tenant_id").notNull(),
+    companyId: uuid("company_id").notNull().references(() => companies.id, { onDelete: "cascade" }),
+    snapshotDate: date("snapshot_date").notNull(),
+    partyType: varchar("party_type", { length: 50 }).notNull(),
+    partyId: uuid("party_id").notNull(),
+    partyName: varchar("party_name", { length: 255 }),
+    currency: varchar("currency", { length: 3 }).default("USD").notNull(),
+    totalOutstanding: decimal("total_outstanding", { precision: 20, scale: 4 }).default("0"),
+    current: decimal("current", { precision: 20, scale: 4 }).default("0"),
+    days30: decimal("days_30", { precision: 20, scale: 4 }).default("0"),
+    days60: decimal("days_60", { precision: 20, scale: 4 }).default("0"),
+    days90: decimal("days_90", { precision: 20, scale: 4 }).default("0"),
+    over90: decimal("over_90", { precision: 20, scale: 4 }).default("0"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (t) => [
+    index("payable_aging_tenant_idx").on(t.tenantId),
+    index("payable_aging_company_idx").on(t.companyId),
+    index("payable_aging_date_idx").on(t.snapshotDate),
+    index("payable_aging_party_idx").on(t.partyType, t.partyId),
+  ]
+);
+
+// Budget (with distribution)
+export const budgets = pgTable(
+  "budgets",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tenantId: uuid("tenant_id").notNull(),
+    companyId: uuid("company_id").notNull().references(() => companies.id, { onDelete: "cascade" }),
+    budgetName: varchar("budget_name", { length: 255 }).notNull(),
+    budgetType: varchar("budget_type", { length: 50 }).default("cost_center").notNull(),
+    fiscalYearId: uuid("fiscal_year_id").notNull().references(() => fiscalYears.id),
+    costCenterId: uuid("cost_center_id"),
+    departmentId: uuid("department_id"),
+    accountId: uuid("account_id").references(() => chartOfAccounts.id),
+    currency: varchar("currency", { length: 3 }).default("USD").notNull(),
+    totalBudget: decimal("total_budget", { precision: 20, scale: 4 }).notNull(),
+    consumedAmount: decimal("consumed_amount", { precision: 20, scale: 4 }).default("0"),
+    availableAmount: decimal("available_amount", { precision: 20, scale: 4 }).default("0"),
+    monthlyDistribution: jsonb("monthly_distribution").default({}),
+    status: varchar("status", { length: 20 }).default("active").notNull(),
+    isActive: boolean("is_active").default(true).notNull(),
+    createdBy: uuid("created_by").references(() => users.id),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (t) => [
+    index("budgets_tenant_id_idx").on(t.tenantId),
+    index("budgets_company_id_idx").on(t.companyId),
+    index("budgets_fiscal_year_idx").on(t.fiscalYearId),
+    index("budgets_cost_center_idx").on(t.costCenterId),
+    index("budgets_account_idx").on(t.accountId),
+  ]
+);
+
+// Financial Statements (Report Builder)
+export const financialStatementReports = pgTable(
+  "financial_statement_reports",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tenantId: uuid("tenant_id").notNull(),
+    companyId: uuid("company_id").notNull().references(() => companies.id, { onDelete: "cascade" }),
+    reportName: varchar("report_name", { length: 255 }).notNull(),
+    reportType: varchar("report_type", { length: 50 }).notNull(), // balance_sheet, income_statement, cash_flow, trial_balance
+    filterData: jsonb("filter_data").default({}),
+    generatedBy: uuid("generated_by").references(() => users.id),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (t) => [
+    index("financial_reports_tenant_idx").on(t.tenantId),
+    index("financial_reports_company_idx").on(t.companyId),
+    index("financial_reports_type_idx").on(t.reportType),
+  ]
+);
+
+// Bank Reconciliation
+export const bankReconciliations = pgTable(
+  "bank_reconciliations",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tenantId: uuid("tenant_id").notNull(),
+    companyId: uuid("company_id").notNull().references(() => companies.id, { onDelete: "cascade" }),
+    bankAccountId: uuid("bank_account_id").notNull().references(() => chartOfAccounts.id),
+    reconciliationDate: date("reconciliation_date").notNull(),
+    bankStatementDate: date("bank_statement_date"),
+    openingBalance: decimal("opening_balance", { precision: 20, scale: 4 }).default("0"),
+    closingBalance: decimal("closing_balance", { precision: 20, scale: 4 }).default("0"),
+    difference: decimal("difference", { precision: 20, scale: 4 }).default("0"),
+    isComplete: boolean("is_complete").default(false).notNull(),
+    status: varchar("status", { length: 20 }).default("pending").notNull(),
+    remarks: text("remarks"),
+    createdBy: uuid("created_by").references(() => users.id),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (t) => [
+    index("bank_recon_tenant_idx").on(t.tenantId),
+    index("bank_recon_company_idx").on(t.companyId),
+    index("bank_recon_bank_account_idx").on(t.bankAccountId),
+  ]
+);
+
+// Tax Withholding (for regions like Brazil, India, etc.)
+export const taxWithholdingCategories = pgTable(
+  "tax_withholding_categories",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tenantId: uuid("tenant_id").notNull(),
+    companyId: uuid("company_id").notNull().references(() => companies.id, { onDelete: "cascade" }),
+    categoryName: varchar("category_name", { length: 255 }).notNull(),
+    taxRate: decimal("tax_rate", { precision: 5, scale: 2 }).notNull(),
+    minAmount: decimal("min_amount", { precision: 20, scale: 4 }),
+    maxAmount: decimal("max_amount", { precision: 20, scale: 4 }),
+    accountId: uuid("account_id").references(() => chartOfAccounts.id),
+    description: text("description"),
+    isActive: boolean("is_active").default(true).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (t) => [
+    index("tax_withholding_tenant_idx").on(t.tenantId),
+    index("tax_withholding_company_idx").on(t.companyId),
   ]
 );

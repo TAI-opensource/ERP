@@ -14,7 +14,8 @@ import {
 } from "drizzle-orm/pg-core";
 import { companies } from "./core";
 import { users } from "./auth";
-import { items } from "./stock";
+import { employees } from "./hr";
+import { items, warehouses } from "./stock";
 
 export const bom = pgTable(
   "bom",
@@ -163,6 +164,13 @@ export const workOrders = pgTable(
     estimatedTotalCost: decimal("estimated_total_cost", { precision: 20, scale: 4 }),
     actualTotalCost: decimal("actual_total_cost", { precision: 20, scale: 4 }),
     remarks: text("remarks"),
+    salesOrderId: uuid("sales_order_id"),
+    salesOrderNumber: varchar("sales_order_number", { length: 50 }),
+    productionPlanId: uuid("production_plan_id").references(() => productionPlans.id),
+    stockEntryType: varchar("stock_entry_type", { length: 50 }),
+    materialTransferred: boolean("material_transferred").default(false).notNull(),
+    materialTransferredAt: timestamp("material_transferred_at"),
+    allowOtherItem: boolean("allow_other_item").default(false).notNull(),
     createdBy: uuid("created_by").references(() => users.id),
     submittedBy: uuid("submitted_by").references(() => users.id),
     submittedAt: timestamp("submitted_at"),
@@ -211,6 +219,11 @@ export const jobCards = pgTable(
     costPerHour: decimal("cost_per_hour", { precision: 20, scale: 4 }),
     totalCost: decimal("total_cost", { precision: 20, scale: 4 }).default("0"),
     remarks: text("remarks"),
+    employeeId: uuid("employee_id").references(() => employees.id),
+    expectedOutput: decimal("expected_output", { precision: 20, scale: 4 }),
+    jobCardType: varchar("job_card_type", { length: 50 }).default("manufacture"),
+    isSubcontracted: boolean("is_subcontracted").default(false).notNull(),
+    subcontractedTo: varchar("subcontracted_to", { length: 255 }),
     createdBy: uuid("created_by").references(() => users.id),
     completedBy: uuid("completed_by").references(() => users.id),
     completedAt: timestamp("completed_at"),
@@ -271,5 +284,113 @@ export const routingOperations = pgTable(
     index("routing_operations_tenant_id_idx").on(t.tenantId),
     index("routing_operations_routing_id_idx").on(t.routingId),
     index("routing_operations_operation_id_idx").on(t.operationId),
+  ]
+);
+
+// ========== ERPNEXT-MISSING MANUFACTURING TABLES ==========
+
+// Production Plan
+export const productionPlans = pgTable(
+  "production_plans",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tenantId: uuid("tenant_id").notNull(),
+    companyId: uuid("company_id").notNull().references(() => companies.id, { onDelete: "cascade" }),
+    planName: varchar("plan_name", { length: 255 }).notNull(),
+    postingDate: date("posting_date").notNull(),
+    itemCode: varchar("item_code", { length: 100 }).notNull(),
+    itemName: varchar("item_name", { length: 255 }),
+    itemId: uuid("item_id").notNull().references(() => items.id),
+    warehouseId: uuid("warehouse_id"),
+    quantity: decimal("quantity", { precision: 20, scale: 4 }).notNull(),
+    plannedQuantity: decimal("planned_quantity", { precision: 20, scale: 4 }).default("0"),
+    producedQuantity: decimal("produced_quantity", { precision: 20, scale: 4 }).default("0"),
+    status: varchar("status", { length: 20 }).default("draft").notNull(),
+    salesOrderId: uuid("sales_order_id"),
+    salesOrderNumber: varchar("sales_order_number", { length: 50 }),
+    materialRequirementsPlanning: boolean("mrp_activated").default(false).notNull(),
+    remarks: text("remarks"),
+    createdBy: uuid("created_by").references(() => users.id),
+    submittedBy: uuid("submitted_by").references(() => users.id),
+    submittedAt: timestamp("submitted_at"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (t) => [
+    index("production_plans_tenant_idx").on(t.tenantId),
+    index("production_plans_company_idx").on(t.companyId),
+    index("production_plans_item_idx").on(t.itemId),
+    index("production_plans_status_idx").on(t.status),
+  ]
+);
+
+// Production Plan Item (MRP items to procure/manufacture)
+export const productionPlanItems = pgTable(
+  "production_plan_items",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tenantId: uuid("tenant_id").notNull(),
+    productionPlanId: uuid("production_plan_id").notNull().references(() => productionPlans.id, { onDelete: "cascade" }),
+    itemId: uuid("item_id").notNull().references(() => items.id),
+    itemName: varchar("item_name", { length: 255 }),
+    warehouseId: uuid("warehouse_id").references(() => warehouses.id),
+    quantityRequired: decimal("quantity_required", { precision: 20, scale: 4 }).notNull(),
+    quantityInStock: decimal("quantity_in_stock", { precision: 20, scale: 4 }).default("0"),
+    quantityToManufacture: decimal("quantity_to_manufacture", { precision: 20, scale: 4 }).default("0"),
+    quantityToPurchase: decimal("quantity_to_purchase", { precision: 20, scale: 4 }).default("0"),
+    bomId: uuid("bom_id").references(() => bom.id),
+    manufacture: boolean("manufacture").default(false).notNull(),
+    purchase: boolean("purchase").default(false).notNull(),
+    description: text("description"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (t) => [
+    index("production_plan_items_tenant_idx").on(t.tenantId),
+    index("production_plan_items_plan_idx").on(t.productionPlanId),
+    index("production_plan_items_item_idx").on(t.itemId),
+  ]
+);
+
+// Production Plan Sales Order
+export const productionPlanSalesOrders = pgTable(
+  "production_plan_sales_orders",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tenantId: uuid("tenant_id").notNull(),
+    productionPlanId: uuid("production_plan_id").notNull().references(() => productionPlans.id, { onDelete: "cascade" }),
+    salesOrderId: uuid("sales_order_id").notNull(),
+    salesOrderNumber: varchar("sales_order_number", { length: 50 }),
+    customerName: varchar("customer_name", { length: 255 }),
+    deliveryDate: date("delivery_date"),
+    quantity: decimal("quantity", { precision: 20, scale: 4 }).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (t) => [
+    index("production_plan_so_tenant_idx").on(t.tenantId),
+    index("production_plan_so_plan_idx").on(t.productionPlanId),
+  ]
+);
+
+// BOM Cost Update (audit trail)
+export const bomCostUpdates = pgTable(
+  "bom_cost_updates",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tenantId: uuid("tenant_id").notNull(),
+    bomId: uuid("bom_id").notNull().references(() => bom.id, { onDelete: "cascade" }),
+    company: varchar("company", { length: 255 }),
+    batchNo: varchar("batch_no", { length: 100 }),
+    materialCost: decimal("material_cost", { precision: 20, scale: 4 }).default("0"),
+    operationalCost: decimal("operational_cost", { precision: 20, scale: 4 }).default("0"),
+    subcontractingCost: decimal("subcontracting_cost", { precision: 20, scale: 4 }).default("0"),
+    totalCost: decimal("total_cost", { precision: 20, scale: 4 }).default("0"),
+    scrapCost: decimal("scrap_cost", { precision: 20, scale: 4 }).default("0"),
+    quantity: decimal("quantity", { precision: 20, scale: 4 }).default("0"),
+    updateDate: date("update_date").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (t) => [
+    index("bom_cost_updates_tenant_idx").on(t.tenantId),
+    index("bom_cost_updates_bom_idx").on(t.bomId),
   ]
 );

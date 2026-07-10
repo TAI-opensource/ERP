@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
       return badRequest("tenantId, companyId, and customerName are required");
     }
 
-    const [newCustomer] = await db
+    const [newCustomer] = await (db as any)
       .insert(customers)
       .values({
         tenantId,
@@ -111,7 +111,7 @@ export async function PUT(request: NextRequest) {
 
     if (!id) return badRequest("id is required");
 
-    const [updated] = await db
+    const [updated] = await (db as any)
       .update(customers)
       .set({ ...updates, updatedAt: new Date() })
       .where(eq(customers.id, id))
@@ -134,7 +134,7 @@ export async function DELETE(request: NextRequest) {
     const id = request.nextUrl.searchParams.get("id");
     if (!id) return badRequest("id is required");
 
-    const [deleted] = await db
+    const [deleted] = await (db as any)
       .delete(customers)
       .where(eq(customers.id, id))
       .returning();

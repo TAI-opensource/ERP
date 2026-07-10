@@ -12,7 +12,7 @@ import {
   index,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
-import { companies } from "./core";
+import { companies, branches } from "./core";
 import { users } from "./auth";
 
 export const departments = pgTable(
@@ -91,7 +91,6 @@ export const employees = pgTable(
     departmentId: uuid("department_id").references(() => departments.id),
     designationId: uuid("designation_id").references(() => designations.id),
     reportsTo: uuid("reports_to"),
-    branchId: uuid("branch_id"),
     employeeType: varchar("employee_type", { length: 50 }).default("full_time").notNull(),
     employmentStatus: varchar("employment_status", { length: 50 }).default("active").notNull(),
     salaryCurrency: varchar("salary_currency", { length: 3 }).default("USD"),
@@ -112,6 +111,22 @@ export const employees = pgTable(
     emergencyContactRelation: varchar("emergency_contact_relation", { length: 50 }),
     image: varchar("image", { length: 512 }),
     notes: text("notes"),
+    employmentTypeId: uuid("employment_type_id").references(() => employmentTypes.id),
+    branchId: uuid("branch_id").references(() => branches.id),
+    holidayListId: uuid("holiday_list_id").references(() => holidayLists.id),
+    shiftType: varchar("shift_type", { length: 100 }),
+    grade: varchar("grade", { length: 100 }),
+    modeOfPayment: varchar("mode_of_payment", { length: 100 }),
+    numberOfDependents: integer("numberOfDependents"),
+    passportNumber: varchar("passport_number", { length: 50 }),
+    visaExpiryDate: date("visa_expiry_date"),
+    contractEndDate: date("contract_end_date"),
+    pensionFund: varchar("pension_fund", { length: 255 }),
+    providentFund: varchar("provident_fund", { length: 255 }),
+    college: varchar("college", { length: 255 }),
+    university: varchar("university", { length: 255 }),
+    highestQualification: varchar("highest_qualification", { length: 255 }),
+    graduationYear: integer("graduation_year"),
     isActive: boolean("is_active").default(true).notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -332,5 +347,333 @@ export const payrollEntries = pgTable(
     index("payroll_entries_employee_id_idx").on(t.employeeId),
     index("payroll_entries_date_idx").on(t.payrollDate),
     index("payroll_entries_status_idx").on(t.status),
+  ]
+);
+
+// ========== ERPNEXT-MISSING HR TABLES ==========
+
+// Employment Type
+export const employmentTypes = pgTable(
+  "employment_types",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tenantId: uuid("tenant_id").notNull(),
+    companyId: uuid("company_id").notNull().references(() => companies.id, { onDelete: "cascade" }),
+    employmentType: varchar("employment_type", { length: 100 }).notNull(),
+    description: text("description"),
+    isActive: boolean("is_active").default(true).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (t) => [
+    index("employment_types_tenant_idx").on(t.tenantId),
+    index("employment_types_company_idx").on(t.companyId),
+  ]
+);
+
+// Holiday List
+export const holidayLists = pgTable(
+  "holiday_lists",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tenantId: uuid("tenant_id").notNull(),
+    companyId: uuid("company_id").notNull().references(() => companies.id, { onDelete: "cascade" }),
+    holidayListName: varchar("holiday_list_name", { length: 255 }).notNull(),
+    fromDate: date("from_date").notNull(),
+    toDate: date("to_date").notNull(),
+    weeklyOffDays: jsonb("weekly_off_days").default([]),
+    totalHolidays: integer("total_holidays").default(0),
+    isDefault: boolean("is_default").default(false).notNull(),
+    isActive: boolean("is_active").default(true).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (t) => [
+    index("holiday_lists_tenant_idx").on(t.tenantId),
+    index("holiday_lists_company_idx").on(t.companyId),
+  ]
+);
+
+// Holidays (individual)
+export const holidays = pgTable(
+  "holidays",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tenantId: uuid("tenant_id").notNull(),
+    holidayListId: uuid("holiday_list_id").notNull().references(() => holidayLists.id, { onDelete: "cascade" }),
+    holidayDate: date("holiday_date").notNull(),
+    description: varchar("description", { length: 255 }).notNull(),
+    weeklyOff: boolean("weekly_off").default(false).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (t) => [
+    index("holidays_tenant_idx").on(t.tenantId),
+    index("holidays_list_idx").on(t.holidayListId),
+    index("holidays_date_idx").on(t.holidayDate),
+  ]
+);
+
+// Shift Type
+export const shiftTypes = pgTable(
+  "shift_types",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tenantId: uuid("tenant_id").notNull(),
+    companyId: uuid("company_id").notNull().references(() => companies.id, { onDelete: "cascade" }),
+    shiftName: varchar("shift_name", { length: 100 }).notNull(),
+    startTime: varchar("start_time", { length: 10 }).notNull(),
+    endTime: varchar("end_time", { length: 10 }).notNull(),
+    hoursPerDay: decimal("hours_per_day", { precision: 5, scale: 2 }).default("8"),
+    gracePeriodMinutes: integer("grace_period_minutes").default(0),
+    isActive: boolean("is_active").default(true).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (t) => [
+    index("shift_types_tenant_idx").on(t.tenantId),
+    index("shift_types_company_idx").on(t.companyId),
+  ]
+);
+
+// Leave Allocation
+export const leaveAllocations = pgTable(
+  "leave_allocations",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tenantId: uuid("tenant_id").notNull(),
+    companyId: uuid("company_id").notNull().references(() => companies.id, { onDelete: "cascade" }),
+    employeeId: uuid("employee_id").notNull().references(() => employees.id),
+    leaveType: varchar("leave_type", { length: 100 }).notNull(),
+    leaveTypeId: uuid("leave_type_id").references(() => leaveTypes.id),
+    fromDate: date("from_date").notNull(),
+    toDate: date("to_date").notNull(),
+    totalAllocation: integer("total_allocation").notNull(),
+    expired: integer("expired").default(0),
+    utilized: integer("utilized").default(0),
+    available: integer("available").default(0),
+    carryForward: boolean("carry_forward").default(false).notNull(),
+    status: varchar("status", { length: 20 }).default("active").notNull(),
+    createdBy: uuid("created_by").references(() => users.id),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (t) => [
+    index("leave_allocations_tenant_idx").on(t.tenantId),
+    index("leave_allocations_company_idx").on(t.companyId),
+    index("leave_allocations_employee_idx").on(t.employeeId),
+    index("leave_allocations_date_idx").on(t.fromDate, t.toDate),
+  ]
+);
+
+// Expense Claim
+export const expenseClaims = pgTable(
+  "expense_claims",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tenantId: uuid("tenant_id").notNull(),
+    companyId: uuid("company_id").notNull().references(() => companies.id, { onDelete: "cascade" }),
+    claimNumber: varchar("claim_number", { length: 50 }).notNull(),
+    employeeId: uuid("employee_id").notNull().references(() => employees.id),
+    postingDate: date("posting_date").notNull(),
+    totalClaimedAmount: decimal("total_claimed_amount", { precision: 20, scale: 4 }).default("0"),
+    totalApprovedAmount: decimal("total_approved_amount", { precision: 20, scale: 4 }).default("0"),
+    totalSanctionedAmount: decimal("total_sanctioned_amount", { precision: 20, scale: 4 }).default("0"),
+    expensesBooked: boolean("expenses_booked").default(false).notNull(),
+    costCenterId: uuid("cost_center_id"),
+    remarks: text("remarks"),
+    status: varchar("status", { length: 20 }).default("draft").notNull(),
+    approvedBy: uuid("approved_by").references(() => users.id),
+    approvedAt: timestamp("approved_at"),
+    createdBy: uuid("created_by").references(() => users.id),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (t) => [
+    index("expense_claims_tenant_idx").on(t.tenantId),
+    index("expense_claims_company_idx").on(t.companyId),
+    index("expense_claims_employee_idx").on(t.employeeId),
+    index("expense_claims_status_idx").on(t.status),
+    uniqueIndex("expense_claims_number_company_idx").on(t.claimNumber, t.companyId),
+  ]
+);
+
+// Expense Claim Detail
+export const expenseClaimDetails = pgTable(
+  "expense_claim_details",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tenantId: uuid("tenant_id").notNull(),
+    expenseClaimId: uuid("expense_claim_id").notNull().references(() => expenseClaims.id, { onDelete: "cascade" }),
+    expenseType: varchar("expense_type", { length: 100 }).notNull(),
+    description: varchar("description", { length: 500 }),
+    amount: decimal("amount", { precision: 20, scale: 4 }).notNull(),
+    sanctionAmount: decimal("sanction_amount", { precision: 20, scale: 4 }),
+    date: date("date").notNull(),
+    costCenterId: uuid("cost_center_id"),
+    projectId: uuid("project_id"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (t) => [
+    index("expense_claim_details_tenant_idx").on(t.tenantId),
+    index("expense_claim_details_claim_idx").on(t.expenseClaimId),
+  ]
+);
+
+// Employee Education
+export const employeeEducation = pgTable(
+  "employee_education",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tenantId: uuid("tenant_id").notNull(),
+    employeeId: uuid("employee_id").notNull().references(() => employees.id, { onDelete: "cascade" }),
+    schoolUniversity: varchar("school_university", { length: 255 }).notNull(),
+    qualification: varchar("qualification", { length: 255 }).notNull(),
+    fieldOfStudy: varchar("field_of_study", { length: 255 }),
+    fromDate: date("from_date"),
+    toDate: date("to_date"),
+    description: text("description"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (t) => [
+    index("employee_education_tenant_idx").on(t.tenantId),
+    index("employee_education_employee_idx").on(t.employeeId),
+  ]
+);
+
+// Employee Work History
+export const employeeWorkHistory = pgTable(
+  "employee_work_history",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tenantId: uuid("tenant_id").notNull(),
+    employeeId: uuid("employee_id").notNull().references(() => employees.id, { onDelete: "cascade" }),
+    company: varchar("company", { length: 255 }).notNull(),
+    designation: varchar("designation", { length: 255 }),
+    department: varchar("department", { length: 255 }),
+    startDate: date("start_date"),
+    endDate: date("end_date"),
+    description: text("description"),
+    salary: decimal("salary", { precision: 20, scale: 4 }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (t) => [
+    index("employee_work_history_tenant_idx").on(t.tenantId),
+    index("employee_work_history_employee_idx").on(t.employeeId),
+  ]
+);
+
+// Payroll Entry (batch payroll processing)
+export const payrollEntryBatches = pgTable(
+  "payroll_entry_batches",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tenantId: uuid("tenant_id").notNull(),
+    companyId: uuid("company_id").notNull().references(() => companies.id, { onDelete: "cascade" }),
+    batchName: varchar("batch_name", { length: 255 }).notNull(),
+    payrollFrequency: varchar("payroll_frequency", { length: 50 }).notNull(),
+    startDate: date("start_date").notNull(),
+    endDate: date("end_date").notNull(),
+    paymentDate: date("payment_date"),
+    departmentId: uuid("department_id").references(() => departments.id),
+    totalEmployees: integer("total_employees").default(0),
+    totalGrossPay: decimal("total_gross_pay", { precision: 20, scale: 4 }).default("0"),
+    totalDeductions: decimal("total_deductions", { precision: 20, scale: 4 }).default("0"),
+    totalNetPay: decimal("total_net_pay", { precision: 20, scale: 4 }).default("0"),
+    status: varchar("status", { length: 20 }).default("draft").notNull(),
+    createdBy: uuid("created_by").references(() => users.id),
+    submittedBy: uuid("submitted_by").references(() => users.id),
+    submittedAt: timestamp("submitted_at"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (t) => [
+    index("payroll_batches_tenant_idx").on(t.tenantId),
+    index("payroll_batches_company_idx").on(t.companyId),
+    index("payroll_batches_status_idx").on(t.status),
+  ]
+);
+
+// Leave Policy
+export const leavePolicies = pgTable(
+  "leave_policies",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tenantId: uuid("tenant_id").notNull(),
+    companyId: uuid("company_id").notNull().references(() => companies.id, { onDelete: "cascade" }),
+    policyName: varchar("policy_name", { length: 255 }).notNull(),
+    description: text("description"),
+    isActive: boolean("is_active").default(true).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (t) => [
+    index("leave_policies_tenant_idx").on(t.tenantId),
+    index("leave_policies_company_idx").on(t.companyId),
+  ]
+);
+
+// Leave Policy Assignment
+export const leavePolicyAssignments = pgTable(
+  "leave_policy_assignments",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tenantId: uuid("tenant_id").notNull(),
+    leavePolicyId: uuid("leave_policy_id").notNull().references(() => leavePolicies.id, { onDelete: "cascade" }),
+    employeeId: uuid("employee_id").references(() => employees.id),
+    departmentId: uuid("department_id").references(() => departments.id),
+    designation: varchar("designation", { length: 255 }),
+    grade: varchar("grade", { length: 100 }),
+    fromDate: date("from_date").notNull(),
+    toDate: date("to_date").notNull(),
+    isActive: boolean("is_active").default(true).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (t) => [
+    index("leave_policy_assignments_tenant_idx").on(t.tenantId),
+    index("leave_policy_assignments_policy_idx").on(t.leavePolicyId),
+    index("leave_policy_assignments_employee_idx").on(t.employeeId),
+  ]
+);
+
+// Auto Attendance
+export const autoAttendances = pgTable(
+  "auto_attendances",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tenantId: uuid("tenant_id").notNull(),
+    companyId: uuid("company_id").notNull().references(() => companies.id, { onDelete: "cascade" }),
+    employeeId: uuid("employee_id").notNull().references(() => employees.id),
+    attendanceDate: date("attendance_date").notNull(),
+    shiftType: varchar("shift_type", { length: 100 }),
+    checkIn: varchar("check_in", { length: 10 }),
+    checkOut: varchar("check_out", { length: 10 }),
+    deviceId: varchar("device_id", { length: 100 }),
+    logs: jsonb("logs").default([]),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (t) => [
+    index("auto_attendances_tenant_idx").on(t.tenantId),
+    index("auto_attendances_employee_idx").on(t.employeeId),
+    index("auto_attendances_date_idx").on(t.attendanceDate),
+  ]
+);
+
+// Employee Checkin
+export const employeeCheckins = pgTable(
+  "employee_checkins",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tenantId: uuid("tenant_id").notNull(),
+    employeeId: uuid("employee_id").notNull().references(() => employees.id),
+    employeeName: varchar("employee_name", { length: 255 }),
+    time: timestamp("time").notNull(),
+    logType: varchar("log_type", { length: 50 }).notNull(), // IN, OUT
+    deviceId: varchar("device_id", { length: 100 }),
+    shiftType: varchar("shift_type", { length: 100 }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (t) => [
+    index("employee_checkins_tenant_idx").on(t.tenantId),
+    index("employee_checkins_employee_idx").on(t.employeeId),
+    index("employee_checkins_time_idx").on(t.time),
   ]
 );

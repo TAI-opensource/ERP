@@ -48,6 +48,18 @@ export const customers = pgTable(
     defaultWarehouse: varchar("default_warehouse", { length: 255 }),
     defaultPriceList: varchar("default_price_list", { length: 100 }),
     defaultAccount: uuid("default_account").references(() => chartOfAccounts.id),
+    customerGroupId: uuid("customer_group_id").references(() => customerGroups.id),
+    territoryId: uuid("territory_id").references(() => territories.id),
+    salesPartnerId: uuid("sales_partner_id").references(() => salesPartners.id),
+    loyaltyProgramId: uuid("loyalty_program_id").references(() => loyaltyPrograms.id),
+    loyaltyPoints: integer("loyalty_points").default(0),
+    loyaltyTier: varchar("loyalty_tier", { length: 50 }),
+    taxWithholdingCategory: varchar("tax_withholding_category", { length: 100 }),
+    frozen: boolean("frozen").default(false).notNull(),
+    frozenAt: timestamp("frozen_at"),
+    onHold: boolean("on_hold").default(false).notNull(),
+    holdTypes: jsonb("hold_types").default([]),
+    addressId: uuid("address_id"),
     notes: text("notes"),
     isActive: boolean("is_active").default(true).notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -170,6 +182,17 @@ export const salesOrders = pgTable(
     submittedAt: timestamp("submitted_at"),
     cancelledBy: uuid("cancelled_by").references(() => users.id),
     cancelledAt: timestamp("cancelled_at"),
+    paymentTermsTemplateId: uuid("payment_terms_template_id").references(() => paymentTermsTemplates.id),
+    shippingAddressName: varchar("shipping_address_name", { length: 255 }),
+    billingAddressName: varchar("billing_address_name", { length: 255 }),
+    costCenterId: uuid("cost_center_id"),
+    projectCode: varchar("project_code", { length: 100 }),
+    dispatchAddressName: varchar("dispatch_address_name", { length: 255 }),
+    companyAddressName: varchar("company_address_name", { length: 255 }),
+    incoterms: varchar("incoterms", { length: 50 }),
+    namedPlace: varchar("named_place", { length: 255 }),
+    isInternal: boolean("is_internal").default(false).notNull(),
+    interCompanyReference: varchar("inter_company_reference", { length: 255 }),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
@@ -244,5 +267,231 @@ export const deliveryNotes = pgTable(
     index("delivery_notes_company_id_idx").on(t.companyId),
     index("delivery_notes_customer_id_idx").on(t.customerId),
     uniqueIndex("delivery_notes_number_company_idx").on(t.deliveryNoteNumber, t.companyId),
+  ]
+);
+
+// ========== ERPNEXT-MISSING SELLING TABLES ==========
+
+// Customer Groups (tree)
+export const customerGroups = pgTable(
+  "customer_groups",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tenantId: uuid("tenant_id").notNull(),
+    companyId: uuid("company_id").notNull().references(() => companies.id, { onDelete: "cascade" }),
+    groupName: varchar("group_name", { length: 255 }).notNull(),
+    parentId: uuid("parent_id"),
+    isGroup: boolean("is_group").default(false).notNull(),
+    lft: integer("lft"),
+    rgt: integer("rgt"),
+    description: text("description"),
+    isActive: boolean("is_active").default(true).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (t) => [
+    index("customer_groups_tenant_idx").on(t.tenantId),
+    index("customer_groups_company_idx").on(t.companyId),
+    index("customer_groups_parent_idx").on(t.parentId),
+  ]
+);
+
+// Territories (tree)
+export const territories = pgTable(
+  "territories",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tenantId: uuid("tenant_id").notNull(),
+    companyId: uuid("company_id").notNull().references(() => companies.id, { onDelete: "cascade" }),
+    territoryName: varchar("territory_name", { length: 255 }).notNull(),
+    parentId: uuid("parent_id"),
+    isGroup: boolean("is_group").default(false).notNull(),
+    lft: integer("lft"),
+    rgt: integer("rgt"),
+    territoryManager: varchar("territory_manager", { length: 255 }),
+    description: text("description"),
+    isActive: boolean("is_active").default(true).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (t) => [
+    index("territories_tenant_idx").on(t.tenantId),
+    index("territories_company_idx").on(t.companyId),
+    index("territories_parent_idx").on(t.parentId),
+  ]
+);
+
+// Sales Partners
+export const salesPartners = pgTable(
+  "sales_partners",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tenantId: uuid("tenant_id").notNull(),
+    companyId: uuid("company_id").notNull().references(() => companies.id, { onDelete: "cascade" }),
+    partnerName: varchar("partner_name", { length: 255 }).notNull(),
+    partnerType: varchar("partner_type", { length: 50 }).default("individual"),
+    commissionRate: decimal("commission_rate", { precision: 5, scale: 2 }),
+    email: varchar("email", { length: 255 }),
+    phone: varchar("phone", { length: 50 }),
+    address: text("address"),
+    isActive: boolean("is_active").default(true).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (t) => [
+    index("sales_partners_tenant_idx").on(t.tenantId),
+    index("sales_partners_company_idx").on(t.companyId),
+  ]
+);
+
+// Loyalty Programs
+export const loyaltyPrograms = pgTable(
+  "loyalty_programs",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tenantId: uuid("tenant_id").notNull(),
+    companyId: uuid("company_id").notNull().references(() => companies.id, { onDelete: "cascade" }),
+    programName: varchar("program_name", { length: 255 }).notNull(),
+    loyaltyProgramType: varchar("loyalty_program_type", { length: 50 }).notNull(),
+    currency: varchar("currency", { length: 3 }).default("USD").notNull(),
+    roundingFactor: decimal("rounding_factor", { precision: 5, scale: 2 }).default("1"),
+    startDate: date("start_date"),
+    endDate: date("end_date"),
+    description: text("description"),
+    isActive: boolean("is_active").default(true).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (t) => [
+    index("loyalty_programs_tenant_idx").on(t.tenantId),
+    index("loyalty_programs_company_idx").on(t.companyId),
+  ]
+);
+
+// Loyalty Program Collection
+export const loyaltyProgramCollections = pgTable(
+  "loyalty_program_collections",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tenantId: uuid("tenant_id").notNull(),
+    loyaltyProgramId: uuid("loyalty_program_id").notNull().references(() => loyaltyPrograms.id, { onDelete: "cascade" }),
+    collectionTier: varchar("collection_tier", { length: 255 }).notNull(),
+    minSpend: decimal("min_spend", { precision: 20, scale: 4 }).default("0"),
+    maxSpend: decimal("max_spend", { precision: 20, scale: 4 }),
+    collectionFactor: integer("collection_factor").default(1),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (t) => [
+    index("loyalty_collections_tenant_idx").on(t.tenantId),
+    index("loyalty_collections_program_idx").on(t.loyaltyProgramId),
+  ]
+);
+
+// Sales Invoice (for consolidated tracking beyond basic invoices)
+export const salesInvoices = pgTable(
+  "sales_invoices",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tenantId: uuid("tenant_id").notNull(),
+    companyId: uuid("company_id").notNull().references(() => companies.id, { onDelete: "cascade" }),
+    invoiceNumber: varchar("invoice_number", { length: 50 }).notNull(),
+    customerId: uuid("customer_id").notNull().references(() => customers.id),
+    salesOrderId: uuid("sales_order_id"),
+    deliveryNoteId: uuid("delivery_note_id"),
+    postingDate: date("posting_date").notNull(),
+    dueDate: date("due_date"),
+    currency: varchar("currency", { length: 3 }).default("USD").notNull(),
+    exchangeRate: decimal("exchange_rate", { precision: 20, scale: 10 }).default("1"),
+    subtotal: decimal("subtotal", { precision: 20, scale: 4 }).default("0"),
+    taxAmount: decimal("tax_amount", { precision: 20, scale: 4 }).default("0"),
+    discountAmount: decimal("discount_amount", { precision: 20, scale: 4 }).default("0"),
+    totalAmount: decimal("total_amount", { precision: 20, scale: 4 }).default("0"),
+    paidAmount: decimal("paid_amount", { precision: 20, scale: 4 }).default("0"),
+    outstandingAmount: decimal("outstanding_amount", { precision: 20, scale: 4 }).default("0"),
+    costCenterId: uuid("cost_center_id"),
+    paymentTermsTemplate: varchar("payment_terms_template", { length: 100 }),
+    status: varchar("status", { length: 20 }).default("draft").notNull(),
+    createdBy: uuid("created_by").references(() => users.id),
+    submittedBy: uuid("submitted_by").references(() => users.id),
+    submittedAt: timestamp("submitted_at"),
+    cancelledBy: uuid("cancelled_by").references(() => users.id),
+    cancelledAt: timestamp("cancelled_at"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (t) => [
+    index("sales_invoices_tenant_idx").on(t.tenantId),
+    index("sales_invoices_company_idx").on(t.companyId),
+    index("sales_invoices_customer_idx").on(t.customerId),
+    index("sales_invoices_date_idx").on(t.postingDate),
+    index("sales_invoices_status_idx").on(t.status),
+    uniqueIndex("sales_invoices_number_company_idx").on(t.invoiceNumber, t.companyId),
+  ]
+);
+
+// Sales Invoice Lines
+export const salesInvoiceLines = pgTable(
+  "sales_invoice_lines",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tenantId: uuid("tenant_id").notNull(),
+    salesInvoiceId: uuid("sales_invoice_id").notNull().references(() => salesInvoices.id, { onDelete: "cascade" }),
+    itemId: uuid("item_id").notNull().references(() => items.id),
+    description: varchar("description", { length: 500 }),
+    quantity: decimal("quantity", { precision: 20, scale: 4 }).notNull(),
+    unitPrice: decimal("unit_price", { precision: 20, scale: 4 }).notNull(),
+    discountPercentage: decimal("discount_percentage", { precision: 5, scale: 2 }).default("0"),
+    discountAmount: decimal("discount_amount", { precision: 20, scale: 4 }).default("0"),
+    taxRate: decimal("tax_rate", { precision: 5, scale: 2 }).default("0"),
+    taxAmount: decimal("tax_amount", { precision: 20, scale: 4 }).default("0"),
+    netAmount: decimal("net_amount", { precision: 20, scale: 4 }).notNull(),
+    amount: decimal("amount", { precision: 20, scale: 4 }).notNull(),
+    incomeAccount: uuid("income_account").references(() => chartOfAccounts.id),
+    warehouseId: uuid("warehouse_id"),
+    costCenterId: uuid("cost_center_id"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (t) => [
+    index("sales_invoice_lines_tenant_idx").on(t.tenantId),
+    index("sales_invoice_lines_invoice_idx").on(t.salesInvoiceId),
+    index("sales_invoice_lines_item_idx").on(t.itemId),
+  ]
+);
+
+// Payment Terms Template
+export const paymentTermsTemplates = pgTable(
+  "payment_terms_templates",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tenantId: uuid("tenant_id").notNull(),
+    companyId: uuid("company_id").notNull().references(() => companies.id, { onDelete: "cascade" }),
+    templateName: varchar("template_name", { length: 255 }).notNull(),
+    description: text("description"),
+    isActive: boolean("is_active").default(true).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (t) => [
+    index("payment_terms_tenant_idx").on(t.tenantId),
+    index("payment_terms_company_idx").on(t.companyId),
+  ]
+);
+
+// Payment Terms Template Details
+export const paymentTermsTemplateDetails = pgTable(
+  "payment_terms_template_details",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tenantId: uuid("tenant_id").notNull(),
+    templateId: uuid("template_id").notNull().references(() => paymentTermsTemplates.id, { onDelete: "cascade" }),
+    dueInDays: integer("due_in_days").notNull(),
+    description: varchar("description", { length: 255 }),
+    invoicePortion: decimal("invoice_portion", { precision: 5, scale: 2 }).default("100"),
+    creditDays: integer("credit_days"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (t) => [
+    index("payment_terms_details_tenant_idx").on(t.tenantId),
+    index("payment_terms_details_template_idx").on(t.templateId),
   ]
 );
